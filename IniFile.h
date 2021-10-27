@@ -266,25 +266,11 @@ public:
     }
     template<>
     void IniFile::write<std::string>(std::string section, std::string key, std::string value){
-        if ((value == "True") || (value == "true") || (value == "TRUE") 
-        || (value == "On") || (value == "on") || (value == "ON")
-        || (value == "Yes") || (value == "yes") || (value == "YES")
-        || (value == "y") || (value == "Y") || (value == "1")){
-            write<bool>(section, key, true);
-        }
-        else {
-            _data[section][key] = value;
-        }
-        
+        _data[section][key] = value;
     }
     template<>
     void IniFile::write<char>(std::string section, std::string key, char value){
-        if ((value == 'y') || (value == 'Y') || (value == '1')){
-            write<bool>(section, key, true);
-        }
-        else {
-            _data[section][key] = value;
-        }
+        _data[section][key] = value;
     }
 // true -  true, True, TRUE, on, On, ON, yes, Yes, YES, y, Y, 1
 // false - остальные
