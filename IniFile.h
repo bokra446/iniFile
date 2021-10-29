@@ -28,33 +28,39 @@ public:
 	IniFile(std::string filename){
         _filename = filename;
         std::ifstream file(_filename);
-        assert(file.is_open());
-        std::string line;
-        std::string section = "";
-        std::string key = "";
-        std::string value = "";
-        std::map<std::string, std::string> s;
-        while(getline(file, line)){
-            line = trimmed(line);
-            if((line.empty()) || (line[0] == ';')){
-                continue;
-            }
-            if (line[0] == '['){
-                if(key != ""){
-                    _data.insert({section, s});
-                    key = "";
-                    value = "";
-                    s.clear();
-                }
-                section = line.substr(1, line.find_last_not_of(']'));
-            }
-            else {
-                key = line.substr(0, line.find('='));
-                value = line.substr(line.find('=') + 1, line.size() - 1);
-                s.insert({key, value});
-            }
+        if (file.fail()){
+            std::ofstream file(_filename);
+            file.close();
         }
-        _data.insert({section, s});
+        else{
+            std::string line;
+            std::string section = "";
+            std::string key = "";
+            std::string value = "";
+            std::map<std::string, std::string> s;
+            while(getline(file, line)){
+                line = trimmed(line);
+                if((line.empty()) || (line[0] == ';')){
+                    continue;
+                }
+                if (line[0] == '['){
+                    if(key != ""){
+                        _data.insert({section, s});
+                        key = "";
+                        value = "";
+                        s.clear();
+                    }
+                    section = line.substr(1, line.find_last_not_of(']'));
+                }
+                else {
+                    key = line.substr(0, line.find('='));
+                    value = line.substr(line.find('=') + 1, line.size() - 1);
+                    s.insert({key, value});
+                }
+            }
+            _data.insert({section, s});
+            file.close();
+        }
     }
 	
     /*
@@ -75,7 +81,7 @@ public:
 
 	void save() const{
         std::ofstream file(_filename);
-        assert(file.is_open());
+        //assert(file.is_open());
 		auto sections = getSections();
         for(int i = 0; i < sections.size(); ++i){
             auto keys = getKeys(sections[i]);
@@ -207,6 +213,9 @@ public:
         _data[section].erase(key);
     }
 };
+
+//не вижу смысла в дополнительной специализации, так как значение
+//defaultValue и так специализированно под каждый тип данных как T{0}
 	template<typename T>
 	T IniFile::read(std::string section, std::string key, T defaultValue) {
         if((sectionExists(section)) && (keyExists(section, key))){
@@ -220,7 +229,8 @@ public:
         }
     }
     template<>
-    bool IniFile::read<bool>(std::string section, std::string key, bool defaultValue) {
+    bool IniFile::read<bool>(std::string section, std::string key, 
+        bool defaultValue) {
         if((sectionExists(section)) && (keyExists(section, key))){
             std::string c = _data.at(section).at(key);
             if ((c == "True") || (c == "true") || (c == "TRUE") 
